@@ -1,0 +1,95 @@
+Build an AI-Powered KPI Audit Tool
+Project Overview
+Create an AI-powered KPI audit tool that analyzes organizational metrics and identifies redundant, misleading, or zero-impact metrics ("vanity metrics") while recommending the most valuable metrics for business outcomes.
+
+Background Context
+Many organizations track numerous KPIs in fancy dashboards, but only a small percentage actually drive decision-making and business outcomes. This leads to:
+
+Information overload for executives
+Teams optimizing for metrics that don't matter
+Resources wasted on tracking, reporting, and discussing meaningless data
+Poor decision-making due to focus on the wrong signals
+Real-world examples:
+
+Sales teams optimizing for "calls made per day" leading to representatives making meaningless calls just to hit targets
+Design teams achieving 100% "feedback resolution rate" by auto-responding with "thanks!" to all feedback
+Dashboards tracking 27+ KPIs when only 2-3 actually matter for outcomes
+Dataset Description
+The provided CSV file contains information about 60 metrics across different departments with the following columns:
+
+Department: The department responsible for the metric
+Metric_Name: Name of the KPI
+Visible_in_Dashboard: Whether the metric is displayed in dashboards
+Used_in_Decision_Making: Whether the metric is actually used for decisions
+Executive_Requested: Whether an executive specifically requested this metric
+Last_Reviewed: When the metric was last reviewed
+Metric_Last_Used_For_Decision: Last time the metric influenced a decision
+Interpretation_Notes: Additional context about how the metric is used
+Project Requirements
+Core Functionality:
+Metric Analysis Engine
+Parse and analyze the CSV data
+Apply classification algorithms to identify metrics that are:
+Visible but not used in decision-making
+Requested by executives but not actionable
+Not reviewed recently
+Have low or no impact on business outcomes
+Recommendation System
+Identify the top 3 most valuable metrics for each department
+Provide justification for why these metrics matter
+Suggest metrics that could be removed from dashboards
+Visualization Dashboard
+Create an interactive dashboard showing:
+Vanity metric distribution by department
+Metrics usage analysis
+Impact assessment of current metrics
+Recommended metrics with supporting evidence
+Technical Requirements:
+Use Python for data analysis and ML components
+Implement a simple ML model to classify metrics (optional: use supervised learning if you want to provide training examples)
+Create a web interface using Flask or Streamlit
+Implement data visualization using Plotly, Matplotlib, or similar libraries
+Include documentation explaining your approach and methodology
+Evaluation Criteria:
+Accuracy in identifying potential vanity metrics
+Quality of metric recommendations and justifications
+User experience and interface design
+Code quality and documentation
+Innovation in approach to metric classification
+Implementation Approach
+Suggested Steps:
+Data Exploration & Preprocessing
+Load and analyze the CSV data
+Clean and preprocess the data as needed
+Extract features for classification
+Vanity Metric Detection Algorithm
+Define criteria for identifying vanity metrics
+Implement rules-based or ML-based classification
+Test and validate the classification accuracy
+Metric Value Assessment
+Create a scoring system to evaluate metric importance
+Consider factors like frequency of use in decisions, recency, and impact
+Rank metrics by department based on value score
+Dashboard Development
+Design an intuitive interface for displaying results
+Create interactive visualizations of metric analysis
+Implement filters and sorting capabilities
+Documentation & Testing
+Document your approach, algorithms, and code
+Test with different datasets or scenarios
+Provide installation and usage instructions
+Additional Considerations
+Consider implementing a feature to simulate the impact of removing vanity metrics
+Add functionality to periodically re-evaluate metrics based on usage patterns
+Include a recommendation engine for new metrics that might be valuable but aren't currently tracked
+Consider ethical implications of how metric recommendations might affect employee behavior
+Deliverables
+Full source code for the KPI audit tool
+Documentation including:
+Technical approach and methodology
+Installation instructions
+User guide
+A demo video or presentation showing the tool in action
+Summary report of findings from analyzing the provided dataset
+Remember, the goal is to help organizations focus on metrics that actually drive outcomes rather than those that just look good on a dashboard. Your tool should promote data-driven decision-making by cutting through the noise of vanity metrics.
+

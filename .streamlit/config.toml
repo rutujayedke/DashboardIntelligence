@@ -1,0 +1,17 @@
+# Streamlit server configuration for deployment
+[server]
+# Use the default port for Streamlit Cloud (8501) rather than 5000
+port = 8501
+headless = true
+enableCORS = true
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+primaryColor = "#1f77b4"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f0f2f6"
+textColor = "#262730"
+font = "sans serif"

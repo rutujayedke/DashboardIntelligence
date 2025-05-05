@@ -1,0 +1,71 @@
+
+[     UTC     ] Logs for dashboardintelligence.streamlit.app/
+────────────────────────────────────────────────────────────────────────────────────────
+[02:43:21] 🖥 Provisioning machine...
+[02:43:21] 🎛 Preparing system...
+[02:43:21] ⛓ Spinning up manager process...
+[02:43:29] 🚀 Starting up repository: 'dashboardintelligence', branch: 'main', main module: 'app.py'
+[02:43:29] 🐙 Cloning repository...
+[02:43:29] 🐙 Cloning into '/mount/src/dashboardintelligence'...
+
+[02:43:29] 🐙 Cloned repository!
+[02:43:29] 🐙 Pulling code changes from Github...
+[02:43:30] 📦 Processing dependencies...
+Prepared [2025-04-29 02:43:34.483495] 47 packages[2025-04-29 02:43:34.484135]  [2025-04-29 02:43:34.484351] in 3.82s[2025-04-29 02:43:34.484557] 
+Installed 47 packages in 121ms
+ + altair==5.5.0
+ + attrs==25.3.0
+ + blinker==1.9.0
+ + cachetools==5.5.2
+ + certifi==2025.4.26
+ + charset-normalizer==3.4.1
+ + [2025-04-29 02:43:34.607691] click==8.1.8
+ [2025-04-29 02:43:34.607920] + contourpy==1.3.2
+ + cycler==0.12.1
+ + fonttools==4.57.0[2025-04-29 02:43:34.608149] 
+ + gitdb==4.0.12
+ + gitpython==3.1.44
+ +[2025-04-29 02:43:34.608353]  greenlet==3.2.1
+ +[2025-04-29 02:43:34.608741]  idna==3.10
+ + jinja2==3.1.6
+ + jsonschema==4.23.0[2025-04-29 02:43:34.609417] 
+ + jsonschema-specifications==2025.4.1
+ + kiwisolver==1.4.8
+ + [2025-04-29 02:43:34.611699] markupsafe==3.0.2
+ + matplotlib==3.10.1
+ + narwhals==1.37.0[2025-04-29 02:43:34.611999] 
+ + numpy==2.2.5
+ + packaging==24.2
+ +[2025-04-29 02:43:34.612246]  pandas==2.2.3
+ + pillow==11.2.1
+ + protobuf==5.29.4[2025-04-29 02:43:34.612450] 
+ + psycopg2-binary==2.9.10[2025-04-29 02:43:34.612648] 
+ + pyarrow==20.0.0
+ + pydeck==0.9.1
+ + pyparsing[2025-04-29 02:43:34.612857] ==3.2.3
+ + python-dateutil==2.9.0.post0
+ + pytz==2025.2[2025-04-29 02:43:34.613052] 
+ + referencing==0.36.2
+ + requests==2.32.3
+ + rpds-py[2025-04-29 02:43:34.613281] ==0.24.0
+ + seaborn==0.13.2
+ + six==1.17.0
+ + smmap==5.0.2
+ + sqlalchemy==2.0.40
+ + streamlit==1.44.1
+ + tenacity==9.1.2
+ + toml==0.10.2
+ + tornado==6.4.2
+ + typing-extensions==4.13.2
+ + tzdata==2025.2
+ + urllib3==2.4.0
+ + watchdog[2025-04-29 02:43:34.613474] ==6.0.0
+[02:43:34] 🐍 Python dependencies were installed from /mount/src/dashboardintelligence/uv.lock using uv-sync.
+[02:43:34] 📦 WARN: More than one requirements file detected in the repository. Available options: uv-sync /mount/src/dashboardintelligence/uv.lock, poetry /mount/src/dashboardintelligence/pyproject.toml. Used: uv-sync with /mount/src/dashboardintelligence/uv.lock
+Check if streamlit is installed
+Streamlit is already installed
+[02:43:36] 📦 Processed dependencies!
+
+
+
+[02:43:41] ❗️ The service has encountered an error while checking the health of the Streamlit app: Get "http://localhost:8501/healthz": dial tcp 127.0.0.1:8501: connect: connection refused

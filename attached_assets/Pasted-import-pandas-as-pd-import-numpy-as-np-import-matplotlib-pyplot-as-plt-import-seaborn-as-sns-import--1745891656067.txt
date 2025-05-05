@@ -1,0 +1,270 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import streamlit as st
+from datetime import datetime, timedelta
+import re
+
+# Set page configuration
+st.set_page_config(
+    page_title="AI-Powered KPI Audit Tool",
+    page_icon="📊",
+    layout="wide"
+)
+
+# Define helper functions
+def load_data(file_path):
+    """Load and preprocess the KPI data from CSV"""
+    df = pd.read_csv(file_path)
+    
+    # Clean column names (remove spaces, etc.)
+    df.columns = [col.strip() for col in df.columns]
+    
+    # Perform basic data cleaning
+    for col in df.columns:
+        if df[col].dtype == 'object':
+            df[col] = df[col].str.strip()
+    
+    return df
+
+def identify_vanity_metrics(df):
+    """Identify metrics that show signs of being vanity metrics"""
+    # Create a copy to avoid SettingWithCopyWarning
+    result_df = df.copy()
+    
+    # Initialize vanity score
+    result_df['vanity_score'] = 0
+    result_df['vanity_reasons'] = ''
+    
+    # Rule 1: Visible but not used in decision making
+    mask = (result_df['Visible_in_Dashboard'] == 'Yes') & (result_df['Used_in_Decision_Making'] == 'No')
+    result_df.loc[mask, 'vanity_score'] += 3
+    result_df.loc[mask, 'vanity_reasons'] += 'Visible but not used in decisions; '
+    
+    # Rule 2: Executive requested but not used in decisions
+    mask = (result_df['Executive_Requested'] == 'Yes') & (result_df['Used_in_Decision_Making'] == 'No')
+    result_df.loc[mask, 'vanity_score'] += 2
+    result_df.loc[mask, 'vanity_reasons'] += 'Executive requested but not used; '
+    
+    # Rule 3: Not recently reviewed
+    mask = (result_df['Last_Reviewed'] == 'Last quarter') | (result_df['Last_Reviewed'] == 'Last year')
+    result_df.loc[mask, 'vanity_score'] += 1
+    result_df.loc[mask, 'vanity_reasons'] += 'Not recently reviewed; '
+    
+    # Rule 4: Check interpretation notes for vanity indicators
+    vanity_keywords = ['vanity', 'optics', 'look good', 'not actionable', 'auto-']
+    for idx, row in result_df.iterrows():
+        if isinstance(row['Interpretation_Notes'], str):
+            for keyword in vanity_keywords:
+                if keyword.lower() in row['Interpretation_Notes'].lower():
+                    result_df.loc[idx, 'vanity_score'] += 2
+                    result_df.loc[idx, 'vanity_reasons'] += f'Notes indicate vanity ({keyword}); '
+    
+    # Clean up vanity_reasons
+    result_df['vanity_reasons'] = result_df['vanity_reasons'].str.rstrip('; ')
+    
+    # Classify metrics based on vanity score
+    result_df['is_vanity'] = result_df['vanity_score'] >= 3
+    
+    return result_df
+
+def identify_valuable_metrics(df):
+    """Identify metrics that are actually valuable for decision making"""
+    # Create a copy to avoid SettingWithCopyWarning
+    result_df = df.copy()
+    
+    # Initialize value score
+    result_df['value_score'] = 0
+    result_df['value_reasons'] = ''
+    
+    # Rule 1: Used in decision making
+    mask = result_df['Used_in_Decision_Making'] == 'Yes'
+    result_df.loc[mask, 'value_score'] += 3
+    result_df.loc[mask, 'value_reasons'] += 'Used in decisions; '
+    
+    # Rule 2: Recently used for decision
+    recent_decision_terms = ['recently', 'this week', '2 weeks ago', 'last month']
+    for idx, row in result_df.iterrows():
+        if isinstance(row['Metric_Last_Used_For_Decision'], str):
+            for term in recent_decision_terms:
+                if term.lower() in row['Metric_Last_Used_For_Decision'].lower():
+                    result_df.loc[idx, 'value_score'] += 2
+                    result_df.loc[idx, 'value_reasons'] += 'Recently used for decisions; '
+                    break
+    
+    # Rule 3: Check interpretation notes for value indicators
+    value_keywords = ['tied to real goals', 'drives revenue', 'customer impact', 'strategic', 'core']
+    for idx, row in result_df.iterrows():
+        if isinstance(row['Interpretation_Notes'], str):
+            for keyword in value_keywords:
+                if keyword.lower() in row['Interpretation_Notes'].lower():
+                    result_df.loc[idx, 'value_score'] += 2
+                    result_df.loc[idx, 'value_reasons'] += f'Notes indicate value ({keyword}); '
+    
+    # Clean up value_reasons
+    result_df['value_reasons'] = result_df['value_reasons'].str.rstrip('; ')
+    
+    # Classify metrics as high-value
+    result_df['is_high_value'] = result_df['value_score'] >= 4
+    
+    return result_df
+
+def get_top_metrics_by_department(df, n=3):
+    """Get top n valuable metrics for each department"""
+    top_metrics = {}
+    
+    for dept in df['Department'].unique():
+        dept_df = df[df['Department'] == dept].sort_values('value_score', ascending=False)
+        top_metrics[dept] = dept_df.head(n)
+    
+    return top_metrics
+
+# Main application
+def main():
+    st.title("🔍 AI-Powered KPI Audit Tool")
+    st.subheader("Identify vanity metrics and focus on what matters")
+    
+    # File uploader
+    uploaded_file = st.file_uploader("Upload your KPI metrics CSV file", type=["csv"])
+    
+    if uploaded_file is not None:
+        # Load and process data
+        df = load_data(uploaded_file)
+        
+        # Display dataset overview
+        st.subheader("Dataset Overview")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Total Metrics", len(df))
+        with col2:
+            st.metric("Departments", df['Department'].nunique())
+        with col3:
+            visible_count = len(df[df['Visible_in_Dashboard'] == 'Yes'])
+            st.metric("Metrics in Dashboard", visible_count)
+        
+        # Process metrics
+        vanity_df = identify_vanity_metrics(df)
+        valuable_df = identify_valuable_metrics(vanity_df)
+        
+        # Dashboard tabs
+        tab1, tab2, tab3 = st.tabs(["Vanity Metrics Analysis", "Valuable Metrics", "Recommendations"])
+        
+        with tab1:
+            st.header("Vanity Metrics Analysis")
+            
+            # Vanity metrics summary
+            vanity_count = sum(valuable_df['is_vanity'])
+            st.subheader(f"Found {vanity_count} potential vanity metrics ({vanity_count/len(df):.1%} of total)")
+            
+            # Vanity metrics by department
+            st.subheader("Vanity Metrics by Department")
+            vanity_by_dept = valuable_df[valuable_df['is_vanity']].groupby('Department').size().reset_index(name='count')
+            
+            col1, col2 = st.columns([3, 2])
+            with col1:
+                fig, ax = plt.subplots(figsize=(10, 6))
+                sns.barplot(data=vanity_by_dept, x='Department', y='count', ax=ax)
+                plt.title("Vanity Metrics by Department")
+                plt.xticks(rotation=45)
+                st.pyplot(fig)
+            
+            with col2:
+                st.dataframe(vanity_by_dept)
+            
+            # List of vanity metrics
+            st.subheader("All Vanity Metrics")
+            vanity_metrics = valuable_df[valuable_df['is_vanity']].sort_values('vanity_score', ascending=False)
+            st.dataframe(
+                vanity_metrics[['Department', 'Metric_Name', 'vanity_score', 'vanity_reasons', 'Visible_in_Dashboard']]
+            )
+        
+        with tab2:
+            st.header("Valuable Metrics Analysis")
+            
+            # Valuable metrics summary
+            valuable_count = sum(valuable_df['is_high_value'])
+            st.subheader(f"Found {valuable_count} high-value metrics ({valuable_count/len(df):.1%} of total)")
+            
+            # Valuable metrics by department
+            st.subheader("High-Value Metrics by Department")
+            value_by_dept = valuable_df[valuable_df['is_high_value']].groupby('Department').size().reset_index(name='count')
+            
+            col1, col2 = st.columns([3, 2])
+            with col1:
+                fig, ax = plt.subplots(figsize=(10, 6))
+                sns.barplot(data=value_by_dept, x='Department', y='count', ax=ax)
+                plt.title("High-Value Metrics by Department")
+                plt.xticks(rotation=45)
+                st.pyplot(fig)
+            
+            with col2:
+                st.dataframe(value_by_dept)
+            
+            # List of valuable metrics
+            st.subheader("All High-Value Metrics")
+            high_value_metrics = valuable_df[valuable_df['is_high_value']].sort_values('value_score', ascending=False)
+            st.dataframe(
+                high_value_metrics[['Department', 'Metric_Name', 'value_score', 'value_reasons', 'Used_in_Decision_Making']]
+            )
+        
+        with tab3:
+            st.header("Recommendations")
+            
+            # Get top metrics by department
+            top_metrics = get_top_metrics_by_department(valuable_df, n=3)
+            
+            # Display recommendations
+            st.subheader("Top 3 Metrics by Department")
+            
+            for dept, metrics_df in top_metrics.items():
+                with st.expander(f"{dept} Department"):
+                    if len(metrics_df) > 0:
+                        st.write(f"**Recommended metrics for {dept}:**")
+                        for idx, row in metrics_df.iterrows():
+                            st.markdown(f"- **{row['Metric_Name']}** (Value Score: {row['value_score']})")
+                            st.markdown(f"  - *Why it matters*: {row['value_reasons']}")
+                            st.markdown(f"  - *Last used*: {row['Metric_Last_Used_For_Decision']}")
+                    else:
+                        st.write(f"No high-value metrics found for {dept}.")
+            
+            # Metrics to remove
+            st.subheader("Recommended Metrics to Remove from Dashboard")
+            metrics_to_remove = valuable_df[
+                (valuable_df['is_vanity'] == True) & 
+                (valuable_df['Visible_in_Dashboard'] == 'Yes')
+            ].sort_values('vanity_score', ascending=False)
+            
+            if len(metrics_to_remove) > 0:
+                for idx, row in metrics_to_remove.iterrows():
+                    st.markdown(f"- **{row['Department']} - {row['Metric_Name']}**")
+                    st.markdown(f"  - *Why it's a vanity metric*: {row['vanity_reasons']}")
+            else:
+                st.write("No metrics recommended for removal.")
+            
+            # Dashboard cleanup summary
+            st.subheader("Dashboard Cleanup Impact")
+            
+            total_dashboard = len(valuable_df[valuable_df['Visible_in_Dashboard'] == 'Yes'])
+            removable = len(metrics_to_remove)
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Current Dashboard Metrics", total_dashboard)
+            with col2:
+                st.metric("Recommended for Removal", removable)
+            with col3:
+                st.metric("Dashboard Size Reduction", f"{removable/total_dashboard:.1%}")
+            
+            # Final recommendations
+            st.subheader("Executive Summary")
+            st.markdown("""
+            Based on our analysis, we recommend:
+            1. **Removing the identified vanity metrics** from dashboards to reduce noise
+            2. **Elevating high-value metrics** to ensure they're prominently displayed
+            3. **Reviewing metrics quarterly** to prevent dashboard bloat
+            4. **Establishing clear criteria** for adding new metrics to dashboards
+            """)
+
+if __name__ == "__main__":
+    main()
